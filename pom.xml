@@ -333,5 +333,6 @@
         <module>federation</module>
         <module>ui</module>
         <module>app</module>
+        <module>admin-commons</module>
     </modules>
 </project>

@@ -22,9 +22,12 @@ import static org.codice.ddf.admin.api.config.sources.SourceConfiguration.SOURCE
 import static org.codice.ddf.admin.api.config.sources.SourceConfiguration.SOURCE_USER_PASSWORD;
 import static org.codice.ddf.admin.api.handler.ConfigurationMessage.FAILED_PERSIST;
 import static org.codice.ddf.admin.api.handler.commons.HandlerCommons.CREATE;
+import static org.codice.ddf.admin.api.handler.commons.HandlerCommons.FAILED_CREATE;
+import static org.codice.ddf.admin.api.handler.commons.HandlerCommons.SUCCESSFUL_CREATE;
 import static org.codice.ddf.admin.api.handler.commons.HandlerCommons.SUCCESSFUL_PERSIST;
 import static org.codice.ddf.admin.api.services.CswServiceProperties.cswConfigToServiceProps;
 import static org.codice.ddf.admin.api.validation.SourceValidationUtils.validateOptionalUsernameAndPassword;
+import static org.codice.ddf.admin.commons.sources.SourceHandlerCommons.getCommonSourceSubtypeDescriptions;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,10 +46,7 @@ import com.google.common.collect.ImmutableMap;
 public class CreateCswSourcePersistMethod extends PersistMethod<CswSourceConfiguration> {
 
     public static final String CREATE_CSW_SOURCE_ID = CREATE;
-
-    public static final String DESCRIPTION =
-            "Attempts to create and persist a CSW source given a configuration.";
-
+    public static final String DESCRIPTION = "Attempts to create and persist a CSW source given a configuration.";
     public static final List<String> REQUIRED_FIELDS = ImmutableList.of(SOURCE_NAME,
             ENDPOINT_URL,
             FACTORY_PID);
@@ -56,11 +56,8 @@ public class CreateCswSourcePersistMethod extends PersistMethod<CswSourceConfigu
             OUTPUT_SCHEMA,
             FORCE_SPATIAL_FILTER);
 
-    private static final Map<String, String> SUCCESS_TYPES = ImmutableMap.of(SUCCESSFUL_PERSIST,
-            "CSW Source successfully created.");
-
-    private static final Map<String, String> FAILURE_TYPES = ImmutableMap.of(FAILED_PERSIST,
-            "Failed to create CSW Source.");
+    private static final Map<String, String> SUCCESS_TYPES = getCommonSourceSubtypeDescriptions(SUCCESSFUL_CREATE);
+    private static final Map<String, String> FAILURE_TYPES = getCommonSourceSubtypeDescriptions(FAILED_CREATE);
 
     public CreateCswSourcePersistMethod() {
         super(CREATE_CSW_SOURCE_ID,

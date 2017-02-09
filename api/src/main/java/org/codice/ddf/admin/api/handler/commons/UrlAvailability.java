@@ -18,6 +18,7 @@ import static org.codice.ddf.admin.api.handler.commons.SourceHandlerCommons.UNKN
 import static org.codice.ddf.admin.api.handler.commons.SourceHandlerCommons.UNTRUSTED_CA;
 import static org.codice.ddf.admin.api.handler.commons.SourceHandlerCommons.VERIFIED_URL;
 
+// TODO: tbatie - 2/8/17 - Remove this class once everything is refactored
 public class UrlAvailability {
 
     private String url;

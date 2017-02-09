@@ -27,9 +27,20 @@
     <dependencies>
         <dependency>
             <groupId>org.codice.ddf.admin.beta</groupId>
+            <artifactId>sources-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.codice.ddf.admin.beta</groupId>
             <artifactId>admin-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.codice.ddf.admin.beta</groupId>
+            <artifactId>admin-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -56,8 +67,7 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}-beta</Bundle-SymbolicName>
                         <Embed-Dependency>
-                            httpcore,
-                            httpclient
+                            admin-commons
                         </Embed-Dependency>
                     </instructions>
                 </configuration>

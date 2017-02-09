@@ -14,9 +14,12 @@
 package org.codice.ddf.admin.sources.opensearch;
 
 import static java.net.HttpURLConnection.HTTP_OK;
-import static org.codice.ddf.admin.api.handler.commons.SourceHandlerCommons.SOURCES_NAMESPACE_CONTEXT;
-import static org.codice.ddf.admin.sources.SourcesCommons.closeClientAndResponse;
-import static org.codice.ddf.admin.sources.SourcesCommons.getCloseableHttpClient;
+import static org.codice.ddf.admin.api.handler.ConfigurationMessage.createInternalErrorMsg;
+import static org.codice.ddf.admin.commons.sources.SourceHandlerCommons.DISCOVERED_URL;
+import static org.codice.ddf.admin.commons.sources.SourceHandlerCommons.UNKNOWN_ENDPOINT;
+import static org.codice.ddf.admin.commons.sources.SourceHandlerCommons.VERIFIED_CAPABILITIES;
+import static org.codice.ddf.admin.commons.sources.SourceHandlerCommons.createCommonSourceConfigMsg;
+import static org.codice.ddf.admin.commons.sources.SourceHandlerCommons.createDocument;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,18 +29,17 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.codice.ddf.admin.api.config.sources.OpenSearchSourceConfiguration;
 import org.codice.ddf.admin.api.handler.commons.UrlAvailability;
+import org.codice.ddf.admin.api.handler.report.ProbeReport;
+import org.codice.ddf.admin.api.handler.report.Report;
+import org.codice.ddf.admin.commons.requests.RequestUtils;
 import org.w3c.dom.Document;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.net.HttpHeaders;
 
 public class OpenSearchSourceUtils {
 
@@ -54,6 +56,65 @@ public class OpenSearchSourceUtils {
 
     private static final String TOTAL_RESULTS_XPATH = "//os:totalResults|//opensearch:totalResults";
 
+    /**
+     * Confirms whether or not an endpoint has Opensearch capabilities.
+     * SUCCESS TYPES - VERIFIED_CAPABILITIES,
+     * FAILURE TYPES - CANNOT_CONNECT, CERT_ERROR, UNKNOWN_ENDPOINT
+     * WARNING TYPES - UNTRUSTED_CA
+     * RETURN TYPES -  CONTENT_TYPE, CONTENT, STATUS_CODE
+     *
+     * @param url
+     * @return report
+     */
+    public static Report verifyOpensearchCapabilites(String url, String username, String password) {
+        ProbeReport requestResults = RequestUtils.sendGetRequest(url + SIMPLE_QUERY_PARAMS, username, password);
+        if(requestResults.containsFailureMessages()) {
+            return requestResults;
+        }
+
+        ProbeReport capabilitiesReport = new ProbeReport();
+        int statusCode = requestResults.getProbeResult(RequestUtils.STATUS_CODE);
+        String contentType = requestResults.getProbeResult(RequestUtils.CONTENT_TYPE);
+
+        if (statusCode == HTTP_OK && OPENSEARCH_MIME_TYPES.contains(contentType)) {
+            return capabilitiesReport.addMessage(createCommonSourceConfigMsg(UNKNOWN_ENDPOINT));
+        }
+
+        Document capabilitiesXml;
+        try {
+            capabilitiesXml = createDocument(requestResults.getProbeResult(RequestUtils.CONTENT));
+        } catch (Exception e) {
+            return capabilitiesReport.addMessage(createInternalErrorMsg("Unable to read response from endpoint."));
+        }
+
+        boolean isOpensearchResponse;
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        try {
+            isOpensearchResponse = (Boolean) xpath.compile(TOTAL_RESULTS_XPATH).evaluate(capabilitiesXml, XPathConstants.BOOLEAN
+        } catch (XPathExpressionException e1) {
+            return capabilitiesReport.addMessage(createCommonSourceConfigMsg(UNKNOWN_ENDPOINT));
+        }
+
+        return capabilitiesReport.addMessage(createCommonSourceConfigMsg(isOpensearchResponse ?
+                VERIFIED_CAPABILITIES :
+                UNKNOWN_ENDPOINT));
+    }
+
+    public static ProbeReport discoverOpensearchUrl(String hostname, int port, String username, String password) {
+        for(String urlFormat : URL_FORMATS) {
+            String testUrl = String.format(urlFormat, hostname, port);
+            Report testReport = verifyOpensearchCapabilites(testUrl, username, password);
+            if(!testReport.containsFailureMessages()) {
+                return new ProbeReport(testReport.messages()).probeResult(DISCOVERED_URL, testUrl);
+            }
+        }
+        return new ProbeReport(createCommonSourceConfigMsg(UNKNOWN_ENDPOINT));
+    }
+
+    public ProbeReport getPreferredOpensearchonfig(String url, String username, String password) {
+            return new OpenSearchSourceConfiguration().endpointUrl(url);
+    }
+
     //Given a config, returns the correct URL format for the endpoint if one exists
     public UrlAvailability confirmEndpointUrl(OpenSearchSourceConfiguration config) {
         Optional<UrlAvailability> result = URL_FORMATS.stream()
@@ -68,23 +129,6 @@ public class OpenSearchSourceUtils {
 
     // Given a configuration with and endpointUrl, determines if that URL is available as an OS source
     public UrlAvailability getUrlAvailability(String url, String un, String pw) {
-        UrlAvailability result = new UrlAvailability(url);
-        boolean queryResponse;
-        int status;
-        String contentType;
-        HttpGet request = new HttpGet(url + SIMPLE_QUERY_PARAMS);
-        CloseableHttpResponse response = null;
-        CloseableHttpClient client = null;
-
-        if (url.startsWith("https") && un != null && pw != null) {
-            byte[] auth = Base64.encodeBase64((un + ":" + pw).getBytes());
-            request.setHeader(HttpHeaders.AUTHORIZATION, "Basic " + new String(auth));
-        }
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        xpath.setNamespaceContext(SOURCES_NAMESPACE_CONTEXT);
-        try {
-            client = getCloseableHttpClient(false);
-            response = client.execute(request);
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
             DocumentBuilder builder = factory.newDocumentBuilder();
