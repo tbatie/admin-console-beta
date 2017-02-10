@@ -17,6 +17,20 @@ import AppBar from 'material-ui/AppBar'
 import Banners from 'system-usage/Banners'
 import Modal from 'system-usage/Modal'
 
+function graphQLFetcher (graphQLParams) {
+  return window.fetch(window.location.origin + '/graphql', {
+    method: 'post',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(graphQLParams)
+  }).then(response => response.json())
+}
+
+const GraphiQL = () => {
+  require('graphiql/graphiql.css')
+  const GraphiQL = require('graphiql')
+  return <GraphiQL fetcher={graphQLFetcher} />
+}
 var DevTools
 
 if (process.env.NODE_ENV === 'production') {
@@ -59,6 +73,7 @@ export const routes = {
   childRoutes: [
     { path: 'ldap', component: Ldap },
     { path: 'sources', component: Sources },
-    { path: 'web-context-policy-manager', component: Wcpm }
+    { path: 'web-context-policy-manager', component: Wcpm },
+    { path: 'graphiql', component: GraphiQL }
   ]
 }
