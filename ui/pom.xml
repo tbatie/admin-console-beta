@@ -40,6 +40,16 @@
             <artifactId>maven-dependency-plugin</artifactId>
             <version>3.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.codice.ddf.admin.beta</groupId>
+            <artifactId>admin-query</artifactId>
+            <version>${project.version}</version>
+            <classifier>schema</classifier>
+            <type>json</type>
+        </dependency>
+        <!--
+        Remove when possible
+        -->
     </dependencies>
     <build>
         <plugins>
@@ -62,6 +72,33 @@
                         </Import-Package>
                     </instructions>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-graphql-schema</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.codice.ddf.admin.beta</groupId>
+                                    <artifactId>admin-query</artifactId>
+                                    <classifier>schema</classifier>
+                                    <version>${project.version}</version>
+                                    <type>json</type>
+                                    <destFileName>schema.json</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>com.github.eirslett</groupId>
@@ -111,33 +148,6 @@
                         <goals>
                             <goal>single</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-graphql-schema</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>org.codice.ddf.admin.beta</groupId>
-                                    <artifactId>admin-query</artifactId>
-                                    <classifier>schema</classifier>
-                                    <version>${project.version}</version>
-                                    <type>json</type>
-                                    <destFileName>schema.json</destFileName>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
-                            <overWriteSnapshots>true</overWriteSnapshots>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

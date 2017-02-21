@@ -5,6 +5,7 @@
     "stage-0"
   ],
   "plugins": [
+    "./babel-relay-plugin",
     "react-hot-loader/babel",
     "transform-react-jsx-source"
   ],

@@ -17,6 +17,8 @@ import AppBar from 'material-ui/AppBar'
 import Banners from 'system-usage/Banners'
 import Modal from 'system-usage/Modal'
 
+import Relay from 'react-relay'
+
 function graphQLFetcher (graphQLParams) {
   return window.fetch(window.location.origin + '/graphql', {
     method: 'post',
@@ -46,6 +48,65 @@ const LinkHomeIcon = (props) => (
     <HomeIcon {...props} />
   </Link>
 )
+
+const relayRoute = {
+  name: 'relayRoute',
+  queries: {
+    ldap: () => Relay.QL`
+      query  {
+        ldap
+      }
+    `,
+    sts: () => Relay.QL`
+      query {
+        sts
+      }
+    `
+  },
+  params: {}
+}
+
+const Sts = Relay.createContainer(({ sts = 'Not found' }) => {
+  return (
+    <pre>
+      {JSON.stringify(sts.claims, null, 2)}
+    </pre>
+  )
+}, {
+  fragments: {
+    sts: () => Relay.QL`
+      fragment on SecurityTokenService {
+        claims
+      }
+    `
+  }
+})
+
+const Random = Relay.createContainer(({ ldap, children }) => {
+  return (
+    <div>
+      <pre>
+        {JSON.stringify(ldap.testConnect.successes[0].code, null, 2)}
+      </pre>
+    </div>
+  )
+}, {
+  initialVariables: {
+    conn: null
+  },
+  fragments: {
+    ldap: () => Relay.QL`
+      fragment on Ldap {
+        testConnect {
+          successes {
+            code
+            content
+          }
+        }
+      }
+    `
+  }
+})
 
 const App = ({ children }) => (
   <MuiThemeProvider>
