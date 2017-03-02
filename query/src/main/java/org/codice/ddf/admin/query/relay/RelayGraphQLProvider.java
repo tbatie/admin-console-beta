@@ -18,7 +18,8 @@ public class RelayGraphQLProvider implements GraphQLQueryProvider {
                         "Hack to workaround https://github.com/facebook/relay/issues/112 re-exposing the root query object")
                 .field(newFieldDefinition().name("query")
                         .description("The query root of the GraphQL interface.")
-                        .type((new GraphQLTypeReference("query"))))
+                        .type((new GraphQLTypeReference("query")))
+                        .staticValue(new HashMap<>()))
                 .build();
     }
 
