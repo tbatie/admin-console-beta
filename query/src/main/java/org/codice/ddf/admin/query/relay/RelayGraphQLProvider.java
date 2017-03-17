@@ -15,7 +15,7 @@ public class RelayGraphQLProvider implements GraphQLQueryProvider {
     public GraphQLObjectType getQuery() {
         return newObject().name("Relay")
                 .description(
-                        "Hack to workaround https://github.com/facebook/relay/issues/112 re-exposing the root query object")
+                        "Workaround for https://github.com/facebook/relay/issues/112 re-exposing the root query object")
                 .field(newFieldDefinition().name("query")
                         .description("The query root of the GraphQL interface.")
                         .type((new GraphQLTypeReference("query")))
