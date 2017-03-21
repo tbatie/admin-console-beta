@@ -42,7 +42,7 @@
         </dependency>
         <dependency>
             <groupId>org.codice.ddf.admin.beta</groupId>
-            <artifactId>admin-query</artifactId>
+            <artifactId>admin-query-schema</artifactId>
             <version>${project.version}</version>
             <classifier>schema</classifier>
             <type>json</type>
