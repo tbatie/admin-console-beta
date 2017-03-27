@@ -87,7 +87,7 @@
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>org.codice.ddf.admin.beta</groupId>
-                                    <artifactId>admin-query</artifactId>
+                                    <artifactId>admin-query-schema</artifactId>
                                     <classifier>schema</classifier>
                                     <version>${project.version}</version>
                                     <type>json</type>
