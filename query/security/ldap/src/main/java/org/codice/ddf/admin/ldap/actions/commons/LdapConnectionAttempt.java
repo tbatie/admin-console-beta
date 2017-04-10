@@ -11,36 +11,40 @@
  * is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  **/
-package org.codice.ddf.admin.common.fields.base.scalar;
-
-import static org.codice.ddf.admin.api.fields.Field.FieldBaseType.STRING;
+package org.codice.ddf.admin.ldap.actions.commons;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.codice.ddf.admin.api.action.Message;
+import org.forgerock.opendj.ldap.Connection;
 
-public class StringField extends BaseScalarField<String> {
+public class LdapConnectionAttempt {
 
-    public StringField(String fieldName) {
-        super(fieldName, null, null, STRING);
+    private List<Message> msgs;
+    private Optional<Connection> connection;
+
+    public LdapConnectionAttempt() {
+        this.msgs = new ArrayList<>();
+        connection = Optional.empty();
     }
 
-    protected StringField(String fieldName, String fieldTypeName, String description) {
-        super(fieldName, fieldTypeName, description, STRING);
+    public LdapConnectionAttempt(Message msg) {
+        this();
+        msgs.add(msg);
     }
 
-    @Override
-    public List<Message> validate() {
-        // TODO: tbatie - 3/16/17 - Validate scalar fields
-        return new ArrayList<>();
+    public LdapConnectionAttempt(Connection connection) {
+        this();
+        this.connection = Optional.of(connection);
     }
 
-    @Override
-    public StringField isRequired(boolean required) {
-        super.isRequired(required);
-        return this;
+    public List<Message> messages() {
+        return msgs;
     }
 
-
+    public Optional<Connection> connection() {
+        return connection;
+    }
 }

@@ -61,7 +61,7 @@ public abstract class BaseListField<T extends Field> extends BaseField<List>
 
     @Override
     public void setValue(List values) {
-        if (values == null) {
+        if (values == null || values.isEmpty()) {
             return;
         }
 

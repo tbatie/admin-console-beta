@@ -11,24 +11,32 @@
  * is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  **/
-package org.codice.ddf.admin.security.common.fields.ldap.query;
+package org.codice.ddf.admin.common.fields.common;
 
+import java.util.List;
+
+import org.codice.ddf.admin.api.action.Message;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 
-public class LdapAttributeField extends StringField {
+public class FilePathField extends StringField {
+    public static final String DEFAULT_FIELD_NAME = "filePath";
 
-    public static final String DEFAULT_FIELD_NAME = "setEnumValue";
+    public static final String FIELD_TYPE_NAME = "FilePath";
 
-    public static final String FIELD_TYPE_NAME = "LdapEntryAttribute";
+    // TODO: tbatie - 4/3/17 - Enforce file path must be relative to ddf home?
+    public static final String DESCRIPTION = "Specifies a unique location in a file system.";
 
-    public static final String DESCRIPTION = "A particular setEnumValue an LDAP entry contains.";
+    public FilePathField() {
+        this(DEFAULT_FIELD_NAME);
+    }
 
-    public LdapAttributeField() {
-        super(DEFAULT_FIELD_NAME, FIELD_TYPE_NAME, DESCRIPTION);
+    public FilePathField(String fieldName) {
+        super(fieldName, FIELD_TYPE_NAME, DESCRIPTION);
     }
 
     @Override
-    public void setValue(String attribute) {
-        super.setValue(attribute);
+    public List<Message> validate() {
+        return super.validate();
+        // TODO: tbatie - 4/3/17 - Validate
     }
 }

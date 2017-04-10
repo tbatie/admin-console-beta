@@ -11,23 +11,23 @@
  * is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  **/
-package org.codice.ddf.admin.security.common.fields.ldap.query;
+package org.codice.ddf.admin.common.fields.common;
 
 import org.codice.ddf.admin.common.fields.base.BaseListField;
 
-public class LdapEntriesListField extends BaseListField<LdapEntryField> {
+public class EntriesField extends BaseListField<PairField> {
 
     public static final String DEFAULT_FIELD_NAME = "entries";
 
-    public static final String DESCRIPTION = "A list of LDAP entries.";
+    public static final String DESCRIPTION = "A list of pairs.";
 
-    public LdapEntriesListField() {
-        super(DEFAULT_FIELD_NAME, DESCRIPTION, new LdapEntryField());
+    public EntriesField() {
+        super(DEFAULT_FIELD_NAME, DESCRIPTION, new PairField());
     }
 
-    @Override
-    public LdapEntriesListField add(LdapEntryField field) {
-        super.add(field);
+    public EntriesField add(String key, String value) {
+        add(new PairField().key(key)
+                .value(value));
         return this;
     }
 }

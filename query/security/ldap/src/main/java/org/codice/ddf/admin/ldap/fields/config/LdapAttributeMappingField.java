@@ -11,13 +11,16 @@
  * is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  **/
-package org.codice.ddf.admin.security.common.fields.ldap;
+package org.codice.ddf.admin.ldap.fields.config;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.codice.ddf.admin.common.fields.base.BaseListField;
 
 public class LdapAttributeMappingField extends BaseListField<LdapAttributeEntryField> {
 
-    public static final String DEFAULT_FIELD_NAME = "mapping";
+    public static final String DEFAULT_FIELD_NAME = "attributeMapping";
 
     public static final String DESCRIPTION =
             "A map containing STS claims to user attributes. Only 1 sts claim is allowed to be mapped to a single user setEnumValue.";
@@ -30,6 +33,12 @@ public class LdapAttributeMappingField extends BaseListField<LdapAttributeEntryF
         add(new LdapAttributeEntryField().stsClaim(stsClaim)
                 .userAttribute(userAttribute));
         return this;
+    }
+
+    public Map<String, String> toMap() {
+        Map<String, String> map = new HashMap<>();
+        getList().stream().forEach(entry -> map.put(entry.stsClaim(), entry.userAttribute()));
+        return map;
     }
 
 }

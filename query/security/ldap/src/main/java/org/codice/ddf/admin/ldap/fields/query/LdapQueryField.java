@@ -11,24 +11,19 @@
  * is distributed along with this program and can be found at
  * <http://www.gnu.org/licenses/lgpl.html>.
  **/
-package org.codice.ddf.admin.security.common.fields.ldap;
+package org.codice.ddf.admin.ldap.fields.query;
 
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
 
-public class LdapDistinguishedName extends StringField {
-    public static final String DEFAULT_FIELD_NAME = "dn";
+public class LdapQueryField extends StringField {
+    public static final String DEFAULT_FIELD_NAME = "query";
 
-    public static final String FIELD_TYPE_NAME = "DistinguishedName";
+    public static final String FIELD_TYPE_NAME = "LdapQuery";
 
-    // TODO: tbatie - 2/21/17 - Add examples of DN's here
     public static final String DESCRIPTION =
-            "A specific position within the Directory Information Tree (DIT).";
+            "A Search filters that enables you to define search criteria. Ex: (objectClass=*). LDAP query syntax can be found at: https://msdn.microsoft.com/en-us/library/aa746475(v=vs.85).aspx";
 
-    public LdapDistinguishedName() {
+    public LdapQueryField() {
         super(DEFAULT_FIELD_NAME, FIELD_TYPE_NAME, DESCRIPTION);
-    }
-
-    public LdapDistinguishedName(String fieldName) {
-        super(fieldName, FIELD_TYPE_NAME, DESCRIPTION);
     }
 }
