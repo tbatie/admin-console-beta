@@ -58,6 +58,8 @@ public class LdapActionCreator extends BaseActionCreator {
 
     @Override
     public List<Action> getPersistActions() {
-        return Arrays.asList(new SaveLdapConfiguration(configuratorFactory), new DeleteLdapConfiguration(configuratorFactory), new InstallEmbeddedLdap(configuratorFactory.getConfigurator()));
+        return Arrays.asList(new SaveLdapConfiguration(configuratorFactory),
+                new DeleteLdapConfiguration(configuratorFactory),
+                new InstallEmbeddedLdap(configuratorFactory));
     }
 }

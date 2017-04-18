@@ -18,18 +18,18 @@ import org.codice.ddf.admin.common.message.WarningMessage;
 
 public class LdapMessages {
 
-    public static final ErrorMessage CANNOT_CONFIGURE = new ErrorMessage("CANNOT_CONFIGURE");
-    public static final ErrorMessage CANNOT_CONNECT = new ErrorMessage("CANNOT_CONNECT");
-    public static final ErrorMessage CANNOT_BIND = new ErrorMessage("CANNOT_BIND");
+    // TODO: tbatie - 4/17/17 - Fix all these messages once paths are properly implemented
+    public static ErrorMessage cannotConnectError() {
+        return new ErrorMessage("CANNOT_CONNECT");
+    }
 
-    public static final ErrorMessage BASE_USER_DN_NOT_FOUND = new ErrorMessage("BASE_USER_DN_NOT_FOUND");
-    public static final ErrorMessage BASE_GROUP_DN_NOT_FOUND = new ErrorMessage("BASE_GROUP_DN_NOT_FOUND");
+    public static ErrorMessage cannotBindError() {
+        return new ErrorMessage("CANNOT_BIND");
+    }
 
-    public static final WarningMessage NO_USERS_IN_BASE_USER_DN = new WarningMessage("NO_USERS_IN_BASE_USER_DN");
-    public static final WarningMessage NO_GROUPS_IN_BASE_GROUP_DN = new WarningMessage("NO_GROUPS_IN_BASE_GROUP_DN");
-    public static final WarningMessage NO_GROUPS_WITH_MEMBERS = new WarningMessage("NO_GROUPS_WITH_MEMBERS");
-    public static final WarningMessage NO_REFERENCED_MEMBER = new WarningMessage("NO_REFERENCED_MEMBER");
-    public static final WarningMessage USER_NAME_ATTRIBUTE_NOT_FOUND = new WarningMessage("USER_NAME_ATTRIBUTE_NOT_FOUND");
+    public static ErrorMessage internalError() {
+        return new ErrorMessage("INTERNAL_ERROR");
+    }
 
     public static ErrorMessage invalidDnFormatError(String pathOrigin) {
         return  new ErrorMessage("INVALID_DN", pathOrigin);
@@ -37,5 +37,37 @@ public class LdapMessages {
 
     public static ErrorMessage invalidQueryError(String pathOrigin) {
         return new ErrorMessage("INVALID_QUERY", pathOrigin);
+    }
+
+    public static ErrorMessage serviceDoesNotExistError(String fieldPath) {
+        return new ErrorMessage("SERVICE_DOES_NOT_EXIST", fieldPath);
+    }
+
+    public static WarningMessage serviceAlreadyExistsWarning(String pathOrigin) {
+        return new WarningMessage("IDENTICAL_SERVICE_EXISTS", pathOrigin);
+    }
+
+    public static ErrorMessage dnDoesNotExistError(String pathOrigin) {
+        return new ErrorMessage("DN_DOES_NOT_EXIST", pathOrigin);
+    }
+
+    public static ErrorMessage noUsersInBaseUserDnError(String pathOrigin) {
+        return new ErrorMessage("NO_USERS_IN_BASE_USER_DN", pathOrigin);
+    }
+
+    public static ErrorMessage noGroupsInBaseGroupDnError(String pathOrigin) {
+        return new ErrorMessage("NO_GROUPS_IN_BASE_GROUP_DN", pathOrigin);
+    }
+
+    public static WarningMessage noGroupsWithMembersWarning(String pathOrigin) {
+        return new WarningMessage("NO_GROUPS_WITH_MEMBERS", pathOrigin);
+    }
+
+    public static WarningMessage noReferencedMemberWarning(String pathOrigin) {
+        return new WarningMessage("NO_REFERENCED_MEMBER", pathOrigin);
+    }
+
+    public static WarningMessage userNameAttributeNotFoundWarning(String pathOrigin) {
+        return new WarningMessage("USER_NAME_ATTRIBUTE_NOT_FOUND", pathOrigin);
     }
 }

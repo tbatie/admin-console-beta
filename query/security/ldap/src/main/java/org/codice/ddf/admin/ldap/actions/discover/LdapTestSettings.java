@@ -13,13 +13,12 @@
  **/
 package org.codice.ddf.admin.ldap.actions.discover;
 
-import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.BASE_GROUP_DN_NOT_FOUND;
-import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.BASE_USER_DN_NOT_FOUND;
-import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.NO_GROUPS_IN_BASE_GROUP_DN;
-import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.NO_GROUPS_WITH_MEMBERS;
-import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.NO_REFERENCED_MEMBER;
-import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.NO_USERS_IN_BASE_USER_DN;
-import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.USER_NAME_ATTRIBUTE_NOT_FOUND;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.dnDoesNotExistError;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.noGroupsInBaseGroupDnError;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.noGroupsWithMembersWarning;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.noReferencedMemberWarning;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.noUsersInBaseUserDnError;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.userNameAttributeNotFoundWarning;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,13 +81,13 @@ public class LdapTestSettings extends TestAction {
                 .get();
 
         if (!checkDirExists(settings.baseUserDn(), ldapConnection)) {
-            addArgumentMessage(BASE_USER_DN_NOT_FOUND.addFieldToPath(settings.baseUserDnField()));
+            addArgumentMessage(dnDoesNotExistError(settings.baseUserDnField().fieldName()));
         } else {
             addArgumentMessages(checkUsersInDir(settings, ldapConnection));
         }
 
         if (!checkDirExists(settings.baseGroupDn(), ldapConnection)) {
-            addArgumentMessage(BASE_GROUP_DN_NOT_FOUND.addFieldToPath(settings.baseGroupDnField()));
+            addArgumentMessage(dnDoesNotExistError(settings.baseGroupDnField().fieldName()));
         } else {
             // First check the group objectClass is on at least one entry in the directory
             addArgumentMessages(checkGroupObjectClass(settings, ldapConnection));
@@ -137,8 +136,8 @@ public class LdapTestSettings extends TestAction {
                 1);
 
         if (baseUsersResults.isEmpty()) {
-            errors.add(NO_USERS_IN_BASE_USER_DN.addFieldToPath(ldapSettings.baseUserDnField()));
-            errors.add(USER_NAME_ATTRIBUTE_NOT_FOUND.addFieldToPath(ldapSettings.usernameAttributeField()));
+            errors.add(noUsersInBaseUserDnError(ldapSettings.baseUserDnField().fieldName()));
+            errors.add(userNameAttributeNotFoundWarning(ldapSettings.usernameAttributeField().fieldName()));
         }
 
         return errors;
@@ -162,8 +161,9 @@ public class LdapTestSettings extends TestAction {
                 1);
 
         if (baseGroupResults.isEmpty()) {
-            errors.add(NO_GROUPS_IN_BASE_GROUP_DN.addFieldToPath(settings.baseGroupDnField()));
-            errors.add(NO_GROUPS_IN_BASE_GROUP_DN.addFieldToPath(settings.groupObjectClassField()));
+            // TODO: tbatie - 4/18/17 - I think we should return back a general error rather than givving the same error for multiple fields
+            errors.add(noGroupsInBaseGroupDnError(settings.baseGroupDnField().fieldName()));
+            errors.add(noGroupsInBaseGroupDnError(settings.groupObjectClassField().fieldName()));
         }
 
         return errors;
@@ -180,7 +180,7 @@ public class LdapTestSettings extends TestAction {
                 1);
 
         if (groups.isEmpty()) {
-            errors.add(NO_GROUPS_WITH_MEMBERS.addFieldToPath(settings.groupAttributeHoldingMemberField()));
+            errors.add(noGroupsWithMembersWarning(settings.groupAttributeHoldingMemberField().fieldName()));
         } else {
             errors.addAll(checkReferencedUser(settings, ldapConnection, groups.get(0)));
         }
@@ -202,10 +202,11 @@ public class LdapTestSettings extends TestAction {
         String userFilter = split.get(0);
         String checkUserBase = String.join(",", split.subList(1, split.size()));
         if (!checkUserBase.equalsIgnoreCase(settings.baseUserDn())) {
-            errors.add(NO_REFERENCED_MEMBER.addFieldToPath(settings.memberAttributeReferencedInGroupField()));
+            // TODO: tbatie - 4/18/17 - I think we should return back a general error rather than givving the same error for multiple fields
+            errors.add(noReferencedMemberWarning(settings.memberAttributeReferencedInGroupField().fieldName()));
         }
         if (!userFilter.split("=")[0].equalsIgnoreCase(settings.memberAttributeReferencedInGroup())) {
-            errors.add(NO_REFERENCED_MEMBER.addFieldToPath(settings.memberAttributeReferencedInGroupField()));
+            errors.add(noReferencedMemberWarning(settings.memberAttributeReferencedInGroupField().fieldName()));
         }
         List<SearchResultEntry> foundMember = utils.getLdapQueryResults(ldapConnection,
                 settings.baseUserDn(),
@@ -214,7 +215,7 @@ public class LdapTestSettings extends TestAction {
                 1);
 
         if (foundMember.isEmpty()) {
-            errors.add(NO_REFERENCED_MEMBER.addFieldToPath(settings.memberAttributeReferencedInGroupField()));
+            errors.add(noReferencedMemberWarning(settings.memberAttributeReferencedInGroupField().fieldName()));
         }
 
         return errors;

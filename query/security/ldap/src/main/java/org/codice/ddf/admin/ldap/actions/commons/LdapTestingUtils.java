@@ -13,9 +13,10 @@
  **/
 package org.codice.ddf.admin.ldap.actions.commons;
 
-import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.CANNOT_BIND;
-import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.CANNOT_CONFIGURE;
-import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.CANNOT_CONNECT;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.cannotBindError;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.cannotConnectError;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.internalError;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.serviceAlreadyExistsWarning;
 import static org.codice.ddf.admin.ldap.fields.connection.LdapBindMethod.DIGEST_MD5_SASL;
 import static org.codice.ddf.admin.ldap.fields.connection.LdapBindMethod.SIMPLE;
 import static org.codice.ddf.admin.ldap.fields.connection.LdapEncryptionMethodField.LDAPS;
@@ -23,10 +24,17 @@ import static org.codice.ddf.admin.ldap.fields.connection.LdapEncryptionMethodFi
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
+import org.codice.ddf.admin.api.action.Message;
+import org.codice.ddf.admin.configurator.ConfigReader;
+import org.codice.ddf.admin.configurator.ConfiguratorFactory;
+import org.codice.ddf.admin.ldap.actions.commons.services.LdapServiceCommons;
+import org.codice.ddf.admin.ldap.fields.config.LdapConfigurationField;
 import org.codice.ddf.admin.ldap.fields.connection.LdapBindUserInfo;
 import org.codice.ddf.admin.ldap.fields.connection.LdapConnectionField;
 import org.forgerock.opendj.ldap.Connection;
@@ -71,20 +79,19 @@ public class LdapTestingUtils {
 
         } catch (Exception e) {
             LOGGER.debug("Error prepping LDAP connection", e);
-            return new LdapConnectionAttempt(CANNOT_CONFIGURE);
+            return new LdapConnectionAttempt(internalError());
         }
 
         Connection ldapConnection;
 
-        try {
-            ldapConnection = new LDAPConnectionFactory(connection.hostname(),
-                    connection.port(),
-                    ldapOptions).getConnection();
+        try (LDAPConnectionFactory connectionFactory = new LDAPConnectionFactory(connection.hostname(),
+                connection.port(), ldapOptions)) {
+            ldapConnection = connectionFactory.getConnection();
         } catch (Exception e) {
             LOGGER.debug("Error opening LDAP connection to [{}:{}]",
                     connection.hostname(),
                     connection.port());
-            return new LdapConnectionAttempt(CANNOT_CONNECT);
+            return new LdapConnectionAttempt(cannotConnectError());
         }
 
         return new LdapConnectionAttempt(ldapConnection);
@@ -99,6 +106,9 @@ public class LdapTestingUtils {
      * @return
      */
     public LdapConnectionAttempt bindUserToLdapConnection(LdapConnectionField connField, LdapBindUserInfo bindInfo) {
+        // This ConnectionAttempt intentionally not closed as its internal connection is bound
+        // and rewrapped in a new ConnectionAttempt. It is only closed in the case of a bind
+        // failure.
         LdapConnectionAttempt connectionAttempt = getLdapConnection(connField);
         if(!connectionAttempt.connection().isPresent()) {
             return connectionAttempt;
@@ -115,52 +125,15 @@ public class LdapTestingUtils {
             connection.bind(bindRequest);
         } catch (Exception e) {
             LOGGER.debug("Error binding to LDAP", e);
-            return new LdapConnectionAttempt(CANNOT_BIND);
+            try {
+                connectionAttempt.close();
+            } catch (IOException closeException) {
+                LOGGER.warn("Error closing LDAP connection", closeException);
+            }
+            return new LdapConnectionAttempt(cannotBindError());
         }
 
         return new LdapConnectionAttempt(connection);
-    }
-
-    private static BindRequest selectBindMethod(String bindMethod, String bindUser,
-            String password, String realm, String kdcAddress) {
-        BindRequest request;
-
-        switch (bindMethod) {
-        case SIMPLE:
-            request = Requests.newSimpleBindRequest(bindUser, password.toCharArray());
-            break;
-//                case SASL:
-//                    request = Requests.newPlainSASLBindRequest(bindUserDN,
-//                            bindUserCredentials.toCharArray());
-//                    break;
-//                case GSSAPI_SASL:
-//                    request = Requests.newGSSAPISASLBindRequest(bindUserDN,
-//                            bindUserCredentials.toCharArray());
-//                    ((GSSAPISASLBindRequest) request).setRealm(realm);
-//                    ((GSSAPISASLBindRequest) request).setKDCAddress(kdcAddress);
-//                    break;
-        case DIGEST_MD5_SASL:
-            request = Requests.newDigestMD5SASLBindRequest(bindUser,
-                    password.toCharArray());
-            ((DigestMD5SASLBindRequest) request).setCipher(DigestMD5SASLBindRequest.CIPHER_HIGH);
-            ((DigestMD5SASLBindRequest) request).getQOPs()
-                    .clear();
-            ((DigestMD5SASLBindRequest) request).getQOPs()
-                    .add(DigestMD5SASLBindRequest.QOP_AUTH_CONF);
-            ((DigestMD5SASLBindRequest) request).getQOPs()
-                    .add(DigestMD5SASLBindRequest.QOP_AUTH_INT);
-            ((DigestMD5SASLBindRequest) request).getQOPs()
-                    .add(DigestMD5SASLBindRequest.QOP_AUTH);
-            if (realm != null && !realm.equals("")) {
-                ((DigestMD5SASLBindRequest) request).setRealm(realm);
-            }
-            break;
-        default:
-            request = Requests.newSimpleBindRequest(bindUser, password.toCharArray());
-            break;
-        }
-
-        return request;
     }
 
     /**
@@ -201,5 +174,100 @@ public class LdapTestingUtils {
 
         reader.close();
         return entries;
+    }
+
+    private static BindRequest selectBindMethod(String bindMethod, String bindUser,
+            String password, String realm, String kdcAddress) {
+        BindRequest request;
+
+        // TODO RAP 31 Jan 17: These case statements should operate in a case-insensitive manner
+        switch (bindMethod) {
+        //        case SASL:
+        //            request = Requests.newPlainSASLBindRequest(bindUserDN,
+        //                    bindUserCredentials.toCharArray());
+        //            break;
+        //        case GSSAPI_SASL:
+        //            request = Requests.newGSSAPISASLBindRequest(bindUserDN,
+        //                    bindUserCredentials.toCharArray());
+        //            ((GSSAPISASLBindRequest) request).setRealm(realm);
+        //            ((GSSAPISASLBindRequest) request).setKDCAddress(kdcAddress);
+        //            break;
+        case DIGEST_MD5_SASL:
+            request = Requests.newDigestMD5SASLBindRequest(bindUser,
+                    password.toCharArray());
+            ((DigestMD5SASLBindRequest) request).setCipher(DigestMD5SASLBindRequest.CIPHER_HIGH);
+            ((DigestMD5SASLBindRequest) request).getQOPs()
+                    .clear();
+            ((DigestMD5SASLBindRequest) request).getQOPs()
+                    .add(DigestMD5SASLBindRequest.QOP_AUTH_CONF);
+            ((DigestMD5SASLBindRequest) request).getQOPs()
+                    .add(DigestMD5SASLBindRequest.QOP_AUTH_INT);
+            ((DigestMD5SASLBindRequest) request).getQOPs()
+                    .add(DigestMD5SASLBindRequest.QOP_AUTH);
+            if (realm != null && !realm.equals("")) {
+                ((DigestMD5SASLBindRequest) request).setRealm(realm);
+            }
+            break;
+        case SIMPLE:
+        default:
+            request = Requests.newSimpleBindRequest(bindUser, password.toCharArray());
+            break;
+        }
+
+        return request;
+    }
+
+    /**
+     * Checks if the given pid retrieves any properties. If no properties are found or the properties are empty then fail.
+     *
+     * @param pid
+     * @param reader
+     * @return with the serviceExists or not
+     */
+    public boolean serviceExists(String pid, ConfigReader reader) {
+        Map configProps = reader.getConfig(pid);
+        if (configProps != null && !configProps.isEmpty()) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Checks for existing LDAP configurations with the same hostname and port of the {@code configuration}.
+     * If there is an existing configuration, warnings will be returned. If there are no existing configurations
+     * an empty {@code List} will be returned.
+     *
+     * Possible warning types: IDENTICAL_SERVICE_EXISTS
+     *
+     * @param newConfig       configuration to check for existing configurations for
+     * @param configuratorFactory
+     * @return {@code List} with {@link Message}s containing warnings if there are existing configurations that match
+     * the {@code configuration}, or empty {@code List} if no matches
+     */
+    public List<Message> ldapConnectionExists(LdapConfigurationField newConfig,
+            ConfiguratorFactory configuratorFactory) {
+        List<Message> msgs = new ArrayList<>();
+        LdapServiceCommons serviceCommons = new LdapServiceCommons();
+        List<LdapConfigurationField> existingConfigs =  serviceCommons.getLdapConfigurations(configuratorFactory).getList();
+
+        boolean identicalServiceExists = existingConfigs.stream()
+                .filter(existingConfig -> identicalSettingsExist(existingConfig, newConfig))
+                .findFirst()
+                .isPresent();
+
+        if(identicalServiceExists) {
+            msgs.add(serviceAlreadyExistsWarning(null));
+        }
+
+        return Collections.emptyList();
+    }
+
+    // TODO: ping host names to see if the they resolve to the same host
+    private boolean identicalSettingsExist(LdapConfigurationField existingConfiguration,
+            LdapConfigurationField newConfiguration) {
+        return existingConfiguration.connectionField().hostname()
+                .equals(newConfiguration.connectionField().hostname())
+                && existingConfiguration.connectionField().port() == existingConfiguration.connectionField().port()
+                && existingConfiguration.settingsField().useCase().equals(newConfiguration.settingsField().useCase());
     }
 }

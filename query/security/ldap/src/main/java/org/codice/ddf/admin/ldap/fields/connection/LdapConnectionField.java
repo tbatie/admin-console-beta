@@ -54,7 +54,6 @@ public class LdapConnectionField extends BaseObjectField {
     }
 
     public LdapConnectionField encryptionMethod(String encryptionMethod) {
-        // TODO: tbatie - 4/2/17 - Make a method for matching the enum value like in the auth types once that is pushed
         this.encryptionMethod.setValue(encryptionMethod);
         return this;
     }

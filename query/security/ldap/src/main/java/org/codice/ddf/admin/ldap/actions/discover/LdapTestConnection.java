@@ -37,6 +37,7 @@ public class LdapTestConnection extends TestAction {
     public LdapTestConnection() {
         super(NAME, DESCRIPTION);
         connection = new LdapConnectionField();
+        connection.allFieldsRequired(true);
         utils = new LdapTestingUtils();
     }
 

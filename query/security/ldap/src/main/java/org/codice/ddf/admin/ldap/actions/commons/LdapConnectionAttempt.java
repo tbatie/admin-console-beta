@@ -13,6 +13,8 @@
  **/
 package org.codice.ddf.admin.ldap.actions.commons;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +22,7 @@ import java.util.Optional;
 import org.codice.ddf.admin.api.action.Message;
 import org.forgerock.opendj.ldap.Connection;
 
-public class LdapConnectionAttempt {
+public class LdapConnectionAttempt implements Closeable {
 
     private List<Message> msgs;
     private Optional<Connection> connection;
@@ -46,5 +48,13 @@ public class LdapConnectionAttempt {
 
     public Optional<Connection> connection() {
         return connection;
+    }
+
+
+    @Override
+    public void close() throws IOException {
+        if (connection.isPresent() && !connection.get().isClosed()) {
+            connection.get().close();
+        }
     }
 }

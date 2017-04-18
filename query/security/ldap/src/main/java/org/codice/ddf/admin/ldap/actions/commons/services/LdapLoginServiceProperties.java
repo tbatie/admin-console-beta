@@ -14,7 +14,7 @@
 package org.codice.ddf.admin.ldap.actions.commons.services;
 
 import static org.codice.ddf.admin.ldap.actions.commons.services.LdapClaimsHandlerServiceProperties.SERVICE_PID_KEY;
-import static org.codice.ddf.admin.ldap.fields.config.LdapUseCase.LOGIN;
+import static org.codice.ddf.admin.ldap.fields.config.LdapUseCase.AUTHENTICATION;
 import static org.codice.ddf.admin.ldap.fields.connection.LdapEncryptionMethodField.LDAPS;
 
 import java.net.URI;
@@ -81,7 +81,7 @@ public class LdapLoginServiceProperties {
                 .usernameAttribute(mapStringValue(USER_NAME_ATTRIBUTE, props))
                 .baseUserDn(mapStringValue(USER_BASE_DN, props))
                 .baseGroupDn(mapStringValue(GROUP_BASE_DN, props))
-                .useCase(LOGIN);
+                .useCase(AUTHENTICATION);
 
         // TODO: tbatie - 4/3/17 - Don't think we need the factory pid
         //        ldapConfiguration.factoryPid(mapStringValue(FACTORY_PID_KEY, props));

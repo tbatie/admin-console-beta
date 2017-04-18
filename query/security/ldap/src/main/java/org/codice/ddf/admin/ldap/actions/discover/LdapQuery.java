@@ -42,6 +42,8 @@ public class LdapQuery extends BaseAction<ListField<MapField>> {
 
     public static final String DESCRIPTION = "Executes a query against LDAP.";
 
+    public static final int DEFAULT_MAX_QUERY_RESULTS = 25;
+
     private LdapConnectionField conn;
 
     private LdapBindUserInfo creds;
@@ -53,6 +55,7 @@ public class LdapQuery extends BaseAction<ListField<MapField>> {
     private LdapQueryField query;
 
     private LdapTestingUtils utils;
+
 
     public LdapQuery() {
         super(NAME, DESCRIPTION, new ListFieldImpl<>(MapField.class));
@@ -66,8 +69,7 @@ public class LdapQuery extends BaseAction<ListField<MapField>> {
 
     @Override
     public List<Field> getArguments() {
-        // TODO: tbatie - 4/3/17 - Add other args
-        return ImmutableList.of(conn, creds, dn, maxQueryResults, query);
+        return ImmutableList.of(conn, creds, maxQueryResults, dn, query);
     }
 
     @Override
@@ -75,9 +77,10 @@ public class LdapQuery extends BaseAction<ListField<MapField>> {
 
         LdapConnectionAttempt connectionAttempt = utils.bindUserToLdapConnection(conn, creds);
         addReturnValueMessages(connectionAttempt.messages());
+        ListField<MapField> entries = new ListFieldImpl<>(MapField.class);
 
         if(!connectionAttempt.connection().isPresent()) {
-            return null;
+            return entries;
         }
 
         List<SearchResultEntry> searchResults = utils.getLdapQueryResults(
@@ -85,7 +88,7 @@ public class LdapQuery extends BaseAction<ListField<MapField>> {
                 dn.getValue(),
                 query.getValue(),
                 SearchScope.WHOLE_SUBTREE,
-                maxQueryResults.getValue());
+                maxQueryResults.getValue() == null ? DEFAULT_MAX_QUERY_RESULTS : maxQueryResults.getValue());
 
         List<MapField> convertedSearchResults = new ArrayList<>();
 
@@ -109,6 +112,6 @@ public class LdapQuery extends BaseAction<ListField<MapField>> {
             convertedSearchResults.add(entryMap);
         }
 
-        return new ListFieldImpl<>(MapField.class).addAll(convertedSearchResults);
+        return entries.addAll(convertedSearchResults);
     }
 }

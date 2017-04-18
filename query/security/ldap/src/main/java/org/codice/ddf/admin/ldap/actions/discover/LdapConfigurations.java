@@ -13,6 +13,8 @@
  **/
 package org.codice.ddf.admin.ldap.actions.discover;
 
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.serviceDoesNotExistError;
+
 import java.util.List;
 
 import org.codice.ddf.admin.api.fields.Field;
@@ -21,6 +23,7 @@ import org.codice.ddf.admin.common.actions.BaseAction;
 import org.codice.ddf.admin.common.fields.base.ListFieldImpl;
 import org.codice.ddf.admin.common.fields.common.PidField;
 import org.codice.ddf.admin.configurator.ConfiguratorFactory;
+import org.codice.ddf.admin.ldap.actions.commons.LdapTestingUtils;
 import org.codice.ddf.admin.ldap.actions.commons.services.LdapServiceCommons;
 import org.codice.ddf.admin.ldap.fields.config.LdapConfigurationField;
 
@@ -38,6 +41,7 @@ public class LdapConfigurations extends BaseAction<ListField<LdapConfigurationFi
 
     private ConfiguratorFactory configuratorFactory;
     private LdapServiceCommons serviceCommons;
+    private LdapTestingUtils testingUtils;
 
     private List<Field> arguments = ImmutableList.of(pid);
 
@@ -45,6 +49,7 @@ public class LdapConfigurations extends BaseAction<ListField<LdapConfigurationFi
         super(NAME, DESCRIPTION, new ListFieldImpl<>(CONFIGS_ARG_NAME, LdapConfigurationField.class));
         this.configuratorFactory = configuratorFactory;
         serviceCommons = new LdapServiceCommons();
+        testingUtils = new LdapTestingUtils();
     }
 
     @Override
@@ -55,5 +60,17 @@ public class LdapConfigurations extends BaseAction<ListField<LdapConfigurationFi
     @Override
     public ListField<LdapConfigurationField> performAction() {
         return serviceCommons.getLdapConfigurations(configuratorFactory);
+    }
+
+    @Override
+    public void validate() {
+        super.validate();
+        if (containsErrorMsgs()) {
+            return;
+        }
+
+        if (pid.getValue() != null && !testingUtils.serviceExists(pid.getValue(), configuratorFactory.getConfigReader())) {
+            addArgumentMessage(serviceDoesNotExistError(null));
+        }
     }
 }

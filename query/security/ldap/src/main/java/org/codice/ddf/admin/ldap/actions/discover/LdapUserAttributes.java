@@ -68,10 +68,7 @@ public class LdapUserAttributes extends BaseAction<ListField<StringField>> {
                 utils.bindUserToLdapConnection(config.connectionField(), config.bindUserInfoField());
         addArgumentMessages(ldapConnectionAttempt.messages());
 
-        if (!ldapConnectionAttempt.connection()
-                .isPresent()) {
-            // TODO: tbatie - 4/3/17 - Make a toString for LDAPConfig
-            LOGGER.warn("Error binding to LDAP server with config: {}", config.toString());
+        if (!ldapConnectionAttempt.connection().isPresent()) {
             return null;
         }
 
