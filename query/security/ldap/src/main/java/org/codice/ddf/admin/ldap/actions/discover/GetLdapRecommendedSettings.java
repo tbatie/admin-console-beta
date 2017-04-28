@@ -27,7 +27,7 @@ import org.codice.ddf.admin.ldap.fields.query.LdapTypeField;
 
 import com.google.common.collect.ImmutableList;
 
-public class LdapRecommendedSettings extends BaseAction<LdapRecommendedSettingsField> {
+public class GetLdapRecommendedSettings extends BaseAction<LdapRecommendedSettingsField> {
 
     public static final String NAME = "recommendedSettings";
 
@@ -42,10 +42,10 @@ public class LdapRecommendedSettings extends BaseAction<LdapRecommendedSettingsF
 
     private LdapTestingUtils utils;
 
-    public LdapRecommendedSettings() {
+    public GetLdapRecommendedSettings() {
         super(NAME, DESCRIPTION, new LdapRecommendedSettingsField());
-        conn = new LdapConnectionField();
-        creds = new LdapBindUserInfo();
+        conn = new LdapConnectionField().useDefaultRequired();
+        creds = new LdapBindUserInfo().useDefaultRequired();
         ldapType = new LdapTypeField();
         utils = new LdapTestingUtils();
     }
@@ -59,6 +59,7 @@ public class LdapRecommendedSettings extends BaseAction<LdapRecommendedSettingsF
     public LdapRecommendedSettingsField performAction() {
         LdapConnectionAttempt connectionAttempt = utils.bindUserToLdapConnection(conn, creds);
         addMessages(connectionAttempt.messages());
+        addArgumentMessages(connectionAttempt.argumentMessages());
         if(!connectionAttempt.connection().isPresent()) {
             return null;
         }

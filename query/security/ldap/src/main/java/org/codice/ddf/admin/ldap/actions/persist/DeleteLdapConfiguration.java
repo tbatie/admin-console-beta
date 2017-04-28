@@ -13,6 +13,9 @@
  **/
 package org.codice.ddf.admin.ldap.actions.persist;
 
+import static org.codice.ddf.admin.common.message.DefaultMessages.internalError;
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.serviceDoesNotExistError;
+
 import java.util.List;
 
 import org.codice.ddf.admin.api.fields.Field;
@@ -23,6 +26,7 @@ import org.codice.ddf.admin.common.fields.common.PidField;
 import org.codice.ddf.admin.configurator.Configurator;
 import org.codice.ddf.admin.configurator.ConfiguratorFactory;
 import org.codice.ddf.admin.configurator.OperationReport;
+import org.codice.ddf.admin.ldap.actions.commons.LdapTestingUtils;
 import org.codice.ddf.admin.ldap.actions.commons.services.LdapServiceCommons;
 import org.codice.ddf.admin.ldap.fields.config.LdapConfigurationField;
 
@@ -37,12 +41,15 @@ public class DeleteLdapConfiguration extends BaseAction<ListField<LdapConfigurat
     private PidField pid;
     private ConfiguratorFactory configuratorFactory;
     private LdapServiceCommons serviceCommons;
+    private LdapTestingUtils testingUtils;
 
     public DeleteLdapConfiguration(ConfiguratorFactory configuratorFactory) {
         super(NAME, DESCRIPTION, new ListFieldImpl<>("configs", LdapConfigurationField.class));
         pid = new PidField();
         this.configuratorFactory = configuratorFactory;
         serviceCommons = new LdapServiceCommons(configuratorFactory);
+        testingUtils = new LdapTestingUtils();
+
     }
 
     @Override
@@ -57,7 +64,23 @@ public class DeleteLdapConfiguration extends BaseAction<ListField<LdapConfigurat
         OperationReport report =
                 configurator.commit("LDAP Configuration deleted for servicePid: {}",
                         pid.getValue());
-        // TODO: tbatie - 4/3/17 - Add error reporting here
+
+        if(report.containsFailedResults()) {
+            addMessage(internalError());
+        }
+
         return serviceCommons.getLdapConfigurations(configuratorFactory);
+    }
+
+    @Override
+    public void validate() {
+        super.validate();
+        if (containsErrorMsgs()) {
+            return;
+        }
+
+        if (!testingUtils.serviceExists(pid.getValue(), configuratorFactory.getConfigReader())) {
+            addArgumentMessage(serviceDoesNotExistError(pid.path()));
+        }
     }
 }

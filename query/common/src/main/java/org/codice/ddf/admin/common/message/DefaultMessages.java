@@ -33,6 +33,12 @@ public class DefaultMessages {
 
     public static final String INVALID_CONTEXT_PATH = "INVALID_CONTEXT_PATH";
 
+    public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
+
+    public static ErrorMessage internalError() {
+        return new ErrorMessage(INTERNAL_ERROR);
+    }
+
     public static ErrorMessage unsupportedEnum(List<String> path) {
         return new ErrorMessage(UNSUPPORTED_ENUM, path);
     }

@@ -29,6 +29,10 @@ public class CredentialsField extends BaseObjectField {
 
     public static final String DESCRIPTION = "Credentials required for authentication.";
 
+    public static final String USERNAME_FIELD_NAME = "username";
+
+    public static final String USER_PASSWORD_FIELD_NAME = "password";
+
     private StringField username;
 
     private StringField password;
@@ -55,6 +59,11 @@ public class CredentialsField extends BaseObjectField {
         return username.getValue();
     }
 
+    public CredentialsField useDefaultRequiredFields() {
+        username.isRequired(true);
+        password.isRequired(true);
+        return this;
+    }
     @Override
     public List<Field> getFields() {
         return ImmutableList.of(username, password);
@@ -62,7 +71,7 @@ public class CredentialsField extends BaseObjectField {
 
     @Override
     public void initializeFields() {
-        this.username = new StringField("username");
-        this.password = new StringField("password");
+        this.username = new StringField(USERNAME_FIELD_NAME);
+        this.password = new StringField(USER_PASSWORD_FIELD_NAME);
     }
 }

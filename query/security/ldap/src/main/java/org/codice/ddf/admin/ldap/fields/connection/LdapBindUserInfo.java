@@ -25,7 +25,7 @@ import org.codice.ddf.admin.common.fields.common.CredentialsField;
 import com.google.common.collect.ImmutableList;
 
 public class LdapBindUserInfo extends BaseObjectField {
-    public static final String FIELD_NAME = "bindInfo";
+    public static final String DEFAULT_FIELD_NAME = "bindInfo";
 
     public static final String FIELD_TYPE_NAME = "BindUserInfo";
 
@@ -39,7 +39,7 @@ public class LdapBindUserInfo extends BaseObjectField {
     private LdapRealm realm;
 
     public LdapBindUserInfo() {
-        super(FIELD_NAME, FIELD_TYPE_NAME, DESCRIPTION);
+        super(DEFAULT_FIELD_NAME, FIELD_TYPE_NAME, DESCRIPTION);
     }
 
     public LdapBindUserInfo username(String username) {
@@ -74,9 +74,15 @@ public class LdapBindUserInfo extends BaseObjectField {
         return realm.getValue();
     }
 
+    public LdapBindUserInfo useDefaultRequired() {
+        creds.useDefaultRequiredFields();
+        bindMethod.isRequired(true);
+        return this;
+    }
+
     @Override
     public List<Message> validate() {
-        if(bindMethod().equals(DIGEST_MD5_SASL)) {
+        if(bindMethod() != null && bindMethod().equals(DIGEST_MD5_SASL)) {
             realm.isRequired(true);
         }
         return super.validate();

@@ -34,9 +34,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-public class LdapUserAttributes extends BaseAction<ListField<StringField>> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LdapUserAttributes.class);
+public class GetLdapUserAttributes extends BaseAction<ListField<StringField>> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GetLdapUserAttributes.class);
 
     public static final String NAME = "userAttributes";
 
@@ -49,7 +50,7 @@ public class LdapUserAttributes extends BaseAction<ListField<StringField>> {
 
     private LdapTestingUtils utils;
 
-    public LdapUserAttributes() {
+    public GetLdapUserAttributes() {
         super(NAME, DESCRIPTION, new ListFieldImpl<>(StringField.class));
         config = new LdapConfigurationField();
         ldapType = new LdapTypeField();
@@ -64,14 +65,11 @@ public class LdapUserAttributes extends BaseAction<ListField<StringField>> {
     @Override
     public ListField<StringField> performAction() {
 
-        LdapConnectionAttempt ldapConnectionAttempt =
-                utils.bindUserToLdapConnection(config.connectionField(), config.bindUserInfoField());
-        addArgumentMessages(ldapConnectionAttempt.messages());
+        LdapConnectionAttempt ldapConnectionAttempt = utils.bindUserToLdapConnection(config.connectionField(), config.bindUserInfoField());
+        addMessages(ldapConnectionAttempt.messages());
+        addArgumentMessages(ldapConnectionAttempt.argumentMessages());
 
-        if (!ldapConnectionAttempt.connection()
-                .isPresent()) {
-            // TODO: tbatie - 4/3/17 - Make a toString for LDAPConfig
-            LOGGER.warn("Error binding to LDAP server with config: {}", config.toString());
+        if (!ldapConnectionAttempt.connection().isPresent()) {
             return null;
         }
 

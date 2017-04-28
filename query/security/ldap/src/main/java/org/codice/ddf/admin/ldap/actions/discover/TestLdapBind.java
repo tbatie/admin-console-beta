@@ -20,36 +20,45 @@ import org.codice.ddf.admin.common.actions.TestAction;
 import org.codice.ddf.admin.common.fields.base.scalar.BooleanField;
 import org.codice.ddf.admin.ldap.actions.commons.LdapConnectionAttempt;
 import org.codice.ddf.admin.ldap.actions.commons.LdapTestingUtils;
+import org.codice.ddf.admin.ldap.fields.connection.LdapBindUserInfo;
 import org.codice.ddf.admin.ldap.fields.connection.LdapConnectionField;
 
 import com.google.common.collect.ImmutableList;
 
-public class LdapTestConnection extends TestAction {
+public class TestLdapBind extends TestAction {
 
-    public static final String NAME = "testConnect";
+    public static final String ID = "testBind";
 
     public static final String DESCRIPTION =
-            "Attempts to established a connection with the given connection configuration";
+            "Attempts to bind a user to the given ldap connection given the ldap bind user credentials.";
 
-    private LdapConnectionField connection;
+    private LdapConnectionField conn;
+    private LdapBindUserInfo creds;
     private LdapTestingUtils utils;
 
-    public LdapTestConnection() {
-        super(NAME, DESCRIPTION);
-        connection = new LdapConnectionField();
+    public TestLdapBind() {
+        super(ID, DESCRIPTION);
+        conn = new LdapConnectionField().useDefaultRequired();
+        creds = new LdapBindUserInfo().useDefaultRequired();
         utils = new LdapTestingUtils();
     }
 
     @Override
     public List<Field> getArguments() {
-        return ImmutableList.of(connection);
+        return ImmutableList.of(conn, creds);
     }
 
-    // Possible message types: CANNOT_CONFIGURE, CANNOT_CONNECT
+    // Possible message types: CANNOT_CONFIGURE, CANNOT_CONNECT, CANNOT_BIND
     @Override
     public BooleanField performAction() {
-        LdapConnectionAttempt connectionAttempt = utils.getLdapConnection(connection);
+        LdapConnectionAttempt connectionAttempt = utils.bindUserToLdapConnection(conn, creds);
         addMessages(connectionAttempt.messages());
+        addArgumentMessages(connectionAttempt.argumentMessages());
         return new BooleanField(connectionAttempt.connection().isPresent());
     }
+
+    public void setTestingUtils(LdapTestingUtils utils) {
+        this.utils = utils;
+    }
 }
+

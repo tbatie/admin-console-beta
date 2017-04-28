@@ -13,6 +13,8 @@
  **/
 package org.codice.ddf.admin.ldap.actions.discover;
 
+import static org.codice.ddf.admin.ldap.actions.commons.LdapMessages.serviceDoesNotExistError;
+
 import java.util.List;
 
 import org.codice.ddf.admin.api.fields.Field;
@@ -21,12 +23,13 @@ import org.codice.ddf.admin.common.actions.BaseAction;
 import org.codice.ddf.admin.common.fields.base.ListFieldImpl;
 import org.codice.ddf.admin.common.fields.common.PidField;
 import org.codice.ddf.admin.configurator.ConfiguratorFactory;
+import org.codice.ddf.admin.ldap.actions.commons.LdapTestingUtils;
 import org.codice.ddf.admin.ldap.actions.commons.services.LdapServiceCommons;
 import org.codice.ddf.admin.ldap.fields.config.LdapConfigurationField;
 
 import com.google.common.collect.ImmutableList;
 
-public class LdapConfigurations extends BaseAction<ListField<LdapConfigurationField>> {
+public class GetLdapConfigurations extends BaseAction<ListField<LdapConfigurationField>> {
 
     public static final String NAME = "configs";
 
@@ -34,26 +37,39 @@ public class LdapConfigurations extends BaseAction<ListField<LdapConfigurationFi
 
     public static final String DESCRIPTION = "Retrieves all currently configured LDAP settings.";
 
-    private PidField pid = new PidField();
+    private PidField pid;
 
     private ConfiguratorFactory configuratorFactory;
     private LdapServiceCommons serviceCommons;
+    private LdapTestingUtils testingUtils;
 
-    private List<Field> arguments = ImmutableList.of(pid);
-
-    public LdapConfigurations(ConfiguratorFactory configuratorFactory) {
+    public GetLdapConfigurations(ConfiguratorFactory configuratorFactory) {
         super(NAME, DESCRIPTION, new ListFieldImpl<>(CONFIGS_ARG_NAME, LdapConfigurationField.class));
         this.configuratorFactory = configuratorFactory;
+        pid = new PidField();
         serviceCommons = new LdapServiceCommons(configuratorFactory);
+        testingUtils = new LdapTestingUtils();
     }
 
     @Override
     public List<Field> getArguments() {
-        return arguments;
+        return ImmutableList.of(pid);
     }
 
     @Override
     public ListField<LdapConfigurationField> performAction() {
         return serviceCommons.getLdapConfigurations(configuratorFactory);
+    }
+
+    @Override
+    public void validate() {
+        super.validate();
+        if (containsErrorMsgs()) {
+            return;
+        }
+
+        if (pid.getValue() != null && !testingUtils.serviceExists(pid.getValue(), configuratorFactory.getConfigReader())) {
+            addArgumentMessage(serviceDoesNotExistError(pid.path()));
+        }
     }
 }
