@@ -13,40 +13,42 @@
  **/
 package org.codice.ddf.admin.graphql;
 
-import static org.codice.ddf.admin.graphql.common.GraphQLTransformCommons.actionCreatorToGraphQLObjectType;
-import static org.codice.ddf.admin.graphql.common.GraphQLTransformCommons.actionsToGraphQLFieldDef;
-
 import java.util.Collection;
 import java.util.HashMap;
 
-import org.codice.ddf.admin.api.action.ActionCreator;
+import org.codice.ddf.admin.api.FieldProvider;
+import org.codice.ddf.admin.graphql.common.GraphQLTransformCommons;
 
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.servlet.GraphQLMutationProvider;
 import graphql.servlet.GraphQLQueryProvider;
 
+// TODO: tbatie - 5/15/17 - Lets move this into the GraphQLTransformCommons
 public class GraphQLProviderImpl implements GraphQLMutationProvider, GraphQLQueryProvider {
 
-    private ActionCreator creator;
+    private FieldProvider creator;
 
-    public GraphQLProviderImpl(ActionCreator creator) {
+    private GraphQLTransformCommons transformCommons;
+
+    public GraphQLProviderImpl(FieldProvider creator, GraphQLTransformCommons transformCommons) {
         this.creator = creator;
+        this.transformCommons = transformCommons;
     }
 
     @Override
     public Collection<GraphQLFieldDefinition> getMutations() {
-        return actionsToGraphQLFieldDef(creator, creator.getPersistActions());
+        return transformCommons.getGraphqlTransformOutputUtils().fieldsToGraphQLFieldDefinition(creator.getMutationFunctions());
     }
 
     @Override
     public GraphQLObjectType getQuery() {
-        return actionCreatorToGraphQLObjectType(creator, creator.getDiscoveryActions());
+        return transformCommons.getGraphqlTransformOutputUtils().queryProviderToGraphQLObjectType(creator);
     }
 
     @Override
     public String getName() {
-        return creator.name();
+        return creator.fieldName();
     }
 
     @Override

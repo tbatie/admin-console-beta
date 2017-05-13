@@ -29,8 +29,10 @@ import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.codice.ddf.admin.api.action.ActionCreator;
-import org.codice.ddf.admin.api.action.Message;
+import org.codice.ddf.admin.api.FieldProvider;
+import org.codice.ddf.admin.api.report.Message;
+import org.codice.ddf.admin.graphql.common.GraphQLTransformCommons;
+import org.codice.ddf.admin.graphql.common.TestClasses;
 
 import graphql.GraphQLError;
 import graphql.execution.ExecutionStrategy;
@@ -47,7 +49,7 @@ import graphql.servlet.GraphQLVariables;
 
 public class GraphQLServletImpl extends GraphQLServlet {
 
-    private List<ActionCreator> actionCreators = new ArrayList<>();
+    private List<FieldProvider> fieldProviders = new ArrayList<>();
 
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
 
@@ -62,10 +64,14 @@ public class GraphQLServletImpl extends GraphQLServlet {
 
     private void updateSchema() {
         GraphQLObjectType.Builder object = newObject().name("Query");
+        GraphQLTransformCommons transformCommons = new GraphQLTransformCommons();
+        List<GraphQLProviderImpl> providers = new ArrayList<>();
+        fieldProviders.stream()
+                .map(provider -> new GraphQLProviderImpl(provider, transformCommons))
+                .forEach(providers::add);
 
-        List<GraphQLProviderImpl> providers = actionCreators.stream()
-                .map(GraphQLProviderImpl::new)
-                .collect(Collectors.toList());
+        // TODO: tbatie - 5/17/17 - Don't forget to remove this
+        providers.add(new GraphQLProviderImpl(new TestClasses.TestProvider(), transformCommons));
 
         for (GraphQLQueryProvider provider : providers) {
             GraphQLObjectType query = provider.getQuery();
@@ -111,25 +117,25 @@ public class GraphQLServletImpl extends GraphQLServlet {
         result.put("data", data);
 
         if (msgs != null && !msgs.isEmpty()) {
-            List<GraphQLError> graphQLJavaErrors = msgs.stream().filter(msg -> !ActionGraphQLError.class.isInstance(msg)).collect(
+            List<GraphQLError> graphQLJavaErrors = msgs.stream().filter(msg -> !GraphQLErrorMessageWrapper.class.isInstance(msg)).collect(
                     Collectors.toList());
 
-            List<Message> actionMsgs = msgs.stream()
-                    .filter(ActionGraphQLError.class::isInstance)
-                    .map(ActionGraphQLError.class::cast)
-                    .map(ActionGraphQLError::getActionMessage)
+            List<Message> internalMsgs = msgs.stream()
+                    .filter(GraphQLErrorMessageWrapper.class::isInstance)
+                    .map(GraphQLErrorMessageWrapper.class::cast)
+                    .map(GraphQLErrorMessageWrapper::getQueryProviderError)
                     .collect(Collectors.toList());
 
-            List<Message> actionWarnings = actionMsgs.stream()
+            List<Message> internalWarningMsgs = internalMsgs.stream()
                     .filter(error -> error.getType() == Message.MessageType.WARNING)
                     .collect(Collectors.toList());
 
-            List<Message> actionErrors = actionMsgs.stream()
+            List<Message> internalErrorMsgs = internalMsgs.stream()
                     .filter(error -> error.getType() == Message.MessageType.ERROR)
                     .collect(Collectors.toList());
 
-            result.put("errors", Stream.concat(graphQLJavaErrors.stream(), actionErrors.stream()).collect(Collectors.toList()));
-            result.put("warnings", actionWarnings);
+            result.put("errors", Stream.concat(graphQLJavaErrors.stream(), internalErrorMsgs.stream()).collect(Collectors.toList()));
+            result.put("warnings", internalWarningMsgs);
         }
 
         return result;
@@ -167,16 +173,16 @@ public class GraphQLServletImpl extends GraphQLServlet {
         return schema;
     }
 
-    public void bindCreator(ActionCreator creator) {
+    public void bindCreator(FieldProvider creator) {
         updateSchema();
     }
 
-    public void unbindCreator(ActionCreator creator) {
+    public void unbindCreator(FieldProvider creator) {
         updateSchema();
     }
 
-    public void setActionCreators(List<ActionCreator> actionCreators) {
-        this.actionCreators = actionCreators;
+    public void setFieldProviders(List<FieldProvider> fieldProviders) {
+        this.fieldProviders = fieldProviders;
         updateSchema();
     }
 
