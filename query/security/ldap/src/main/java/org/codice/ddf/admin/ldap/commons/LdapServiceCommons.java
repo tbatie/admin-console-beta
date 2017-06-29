@@ -42,8 +42,10 @@ import org.codice.ddf.admin.common.report.message.DefaultMessages;
 import org.codice.ddf.admin.common.services.ServiceCommons;
 import org.codice.ddf.admin.ldap.fields.config.LdapConfigurationField;
 import org.codice.ddf.admin.ldap.fields.config.LdapDirectorySettingsField;
+import org.codice.ddf.admin.ldap.fields.connection.LdapBindMethod;
 import org.codice.ddf.admin.ldap.fields.connection.LdapBindUserInfo;
 import org.codice.ddf.admin.ldap.fields.connection.LdapConnectionField;
+import org.codice.ddf.admin.ldap.fields.connection.LdapEncryptionMethodField;
 import org.codice.ddf.admin.security.common.services.LdapClaimsHandlerServiceProperties;
 import org.codice.ddf.admin.security.common.services.LdapLoginServiceProperties;
 import org.codice.ddf.configuration.PropertyResolver;
@@ -154,6 +156,7 @@ public class LdapServiceCommons {
                     config.bindUserInfoField()
                             .bindMethod());
             //        ldapStsConfig.put(KDC_ADDRESS, config.bindKdcAddress());
+
             ldapStsConfig.put(LdapLoginServiceProperties.REALM,
                     config.bindUserInfoField()
                             .realm());
@@ -244,8 +247,11 @@ public class LdapServiceCommons {
         LdapBindUserInfo bindUserInfo = new LdapBindUserInfo().username(mapValue(props,
                 LdapLoginServiceProperties.LDAP_BIND_USER_DN))
                 .password(FLAG_PASSWORD)
-                .bindMethod(mapValue(props, LdapLoginServiceProperties.BIND_METHOD))
-                .realm(mapValue(props, LdapLoginServiceProperties.REALM));
+                .bindMethod(mapValue(props, LdapLoginServiceProperties.BIND_METHOD));
+
+        if(bindUserInfo.bindMethod() == LdapBindMethod.DigestMd5Sasl.DIGEST_MD5_SASL) {
+            bindUserInfo.realm(mapValue(props, LdapLoginServiceProperties.REALM));
+        }
         //        ldapConfiguration.bindKdcAddress((String) props.get(KDC_ADDRESS));
 
         LdapDirectorySettingsField settings = new LdapDirectorySettingsField().usernameAttribute(
@@ -264,8 +270,13 @@ public class LdapServiceCommons {
             String startTls) {
         LdapConnectionField connection = new LdapConnectionField();
         URI ldapUri = getUriFromProperty(mapValue(props, ldapUrl));
-        if (ldapUri != null) {
-            connection.encryptionMethod(ldapUri.getScheme())
+
+        if (ldapUri != null && ldapUri.getScheme() != null) {
+            // TODO: tbatie - 8/17/17 - It'd be great if we had some sort of match method for matching an EnumValue instead of doing little checks like this
+            connection.encryptionMethod(ldapUri.getScheme()
+                    .equals("ldap") ?
+                    LdapEncryptionMethodField.NoEncryption.NONE :
+                    ldapUri.getScheme())
                     .hostname(ldapUri.getHost())
                     .port(ldapUri.getPort());
         }

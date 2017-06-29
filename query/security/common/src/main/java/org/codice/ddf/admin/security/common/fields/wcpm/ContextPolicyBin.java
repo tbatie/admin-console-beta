@@ -116,6 +116,10 @@ public class ContextPolicyBin extends BaseObjectField {
         return contexts.getValue();
     }
 
+    public ContextPath.ListImpl contextFields() {
+        return contexts;
+    }
+
     public List<String> authTypes() {
         return authTypes.getValue();
     }
@@ -190,5 +194,7 @@ public class ContextPolicyBin extends BaseObjectField {
             isRequired(true);
             return this;
         }
+
+        // TODO: tbatie - 8/15/17 - Collapse identical bins
     }
 }

@@ -17,6 +17,7 @@ import static org.codice.ddf.admin.common.report.message.DefaultMessages.invalid
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -142,6 +143,18 @@ public class ContextPath extends StringField {
         @Override
         public Callable<ContextPath> getCreateListEntryCallable() {
             return ContextPath::new;
+        }
+
+        @Override
+        public ListImpl add(ContextPath value) {
+            // TODO: tbatie - 8/17/17 - Temporary work around, there should be SetField implemented here instead
+            boolean match = elements.stream()
+                    .anyMatch(path -> path.getValue()
+                            .equals(value.getValue()));
+            if(!match) {
+                super.add(value);
+            }
+            return this;
         }
     }
 }
