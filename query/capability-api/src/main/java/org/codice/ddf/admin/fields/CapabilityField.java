@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.codice.ddf.admin.api.Field;
-import org.codice.ddf.admin.capability.Capability;
+import org.codice.ddf.admin.services.api.Capability;
 import org.codice.ddf.admin.common.fields.base.BaseListField;
 import org.codice.ddf.admin.common.fields.base.BaseObjectField;
 import org.codice.ddf.admin.common.fields.base.scalar.StringField;
@@ -19,28 +19,45 @@ public class CapabilityField extends BaseObjectField {
 
   public static final String DESCRIPTION = "Defines a type of functionality that can be started";
 
+  private StringField id;
   private StringField name;
   private StringField description;
 
   public CapabilityField() {
-    this(DEFAULT_FIELD_NAME);
-  }
-
-  public CapabilityField(Capability capability) {
-    this(DEFAULT_FIELD_NAME);
-    name.setValue(capability.getName());
-    description.setValue(capability.getDescription());
-  }
-
-  public CapabilityField(String fieldName) {
-    super(fieldName, FIELD_TYPE, DESCRIPTION);
+    super(DEFAULT_FIELD_NAME, FIELD_TYPE, DESCRIPTION);
+    id = new StringField("id");
     name = new StringField("name");
     description = new StringField("description");
   }
 
+  public CapabilityField(Capability capability) {
+    this();
+    id.setValue(capability.getId());
+    name.setValue(capability.getName());
+    description.setValue(capability.getDescription());
+  }
+
+  public String id() { return id.getValue(); }
+
+  public String name() {
+    return name.getValue();
+  }
+
+  public String description() {
+    return description.getValue();
+  }
+
+  public StringField getNameField() {
+    return name;
+  }
+
+  public StringField getDescriptionField() {
+    return description;
+  }
+
   @Override
   public List<Field> getFields() {
-    return ImmutableList.of(name, description);
+    return ImmutableList.of(id, name, description);
   }
 
   public static class ListImpl extends BaseListField<CapabilityField> {

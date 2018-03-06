@@ -35,5 +35,6 @@
         <module>app</module>
         <module>dev</module>
         <module>capability-api</module>
+        <module>configuration-api</module>
     </modules>
 </project>

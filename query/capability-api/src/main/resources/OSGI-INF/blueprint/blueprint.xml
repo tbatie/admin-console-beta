@@ -13,16 +13,41 @@
 -->
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
 
+    <service id="csw_source_capability" interface="org.codice.ddf.admin.services.api.Capability">
+        <bean class="org.codice.ddf.admin.services.impl.CswSourceCapability">
+            <argument ref="featureService"/>
+        </bean>
+    </service>
+
+    <service id="embedded_ldap_capability"  interface="org.codice.ddf.admin.services.api.Capability">
+        <bean class="org.codice.ddf.admin.services.impl.EmbeddedLdapCapability">
+            <argument ref="featureService"/>
+        </bean>
+    </service>
+
+    <service id="idp_capability" interface="org.codice.ddf.admin.services.api.Capability">
+        <bean class="org.codice.ddf.admin.services.impl.IdpCapability">
+            <argument ref="featureService"/>
+        </bean>
+    </service>
+
     <reference-list id="capabilities"
-                    interface="org.codice.ddf.admin.capability.Capability"
+                    interface="org.codice.ddf.admin.services.api.Capability"
                     availability="optional"
-                    >
+    >
     </reference-list>
 
-    <bean id="capabilityFieldProvider" class="org.codice.ddf.admin.CapabilitiesFieldProvider">
-        <argument ref="capabilities"/>
-    </bean>
+    <service interface="org.codice.ddf.admin.services.api.CapabilitiesProfile">
+        <bean class="org.codice.ddf.admin.services.impl.profile.StandardSecurityProfile">
+            <argument ref="capabilities"/>
+        </bean>
+    </service>
 
-    <service ref="capabilityFieldProvider" interface="org.codice.ddf.admin.api.FieldProvider" />
 
+    <service id="capabilityFieldProvider"
+             interface="org.codice.ddf.admin.services.api.FieldProvider">
+        <bean class="org.codice.ddf.admin.CapabilitiesFieldProvider">
+            <argument ref="capabilities"/>
+        </bean>
+    </service>
 </blueprint>

@@ -8,8 +8,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <name>DDF :: Admin Console :: Query :: Capability</name>
-    <artifactId>capability-api</artifactId>
+    <name>DDF :: Admin Console :: Query :: Configuration</name>
+    <artifactId>configuratoin-api</artifactId>
     <packaging>bundle</packaging>
 
     <dependencies>
@@ -24,9 +24,9 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.karaf.features</groupId>
-            <artifactId>org.apache.karaf.features.core</artifactId>
-            <version>${karaf.version}</version>
+            <groupId>org.codice.ddf.admin.query</groupId>
+            <artifactId>admin-query-security-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
     <build>

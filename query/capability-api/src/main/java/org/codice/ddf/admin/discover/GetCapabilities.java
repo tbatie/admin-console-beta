@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.codice.ddf.admin.api.fields.FunctionField;
-import org.codice.ddf.admin.capability.Capability;
+import org.codice.ddf.admin.services.api.Capability;
 import org.codice.ddf.admin.common.fields.base.function.GetFunctionField;
 import org.codice.ddf.admin.fields.CapabilityField;
 

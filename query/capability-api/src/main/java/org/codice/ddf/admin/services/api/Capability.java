@@ -1,6 +1,8 @@
-package org.codice.ddf.admin.capability;
+package org.codice.ddf.admin.services.api;
 
 public interface Capability {
+
+  String getId();
 
   String getName();
 
